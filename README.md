@@ -1,4 +1,4 @@
 electric-net
 ============
 
-This python library tool model a electrical distribution network using networkx
+This python library to model a electrical distribution network using networkx
