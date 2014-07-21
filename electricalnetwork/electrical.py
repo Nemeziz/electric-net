@@ -1,11 +1,12 @@
 """
+electrical distribution electrical network classes
 
 """
 
 import networkx as nx
 
 
-class ElectricalNetwork (object):
+class ElectricalNetwork(object):
     """
     represents a electrical network and all the associated components
     """
@@ -21,19 +22,18 @@ class ElectricalNetwork (object):
         setattr(self, '__maxNodeEdges__', 6)
         setattr(self, '__maxSwitchDeviceEdges__', 4)
 
-    def __del__ (self):
+    def __del__(self):
         pass
 
 
-    def addNode (self, node):
+    def addNode(self, node):
         """
         Adds a items as a node to the network
         """
         self.__networkGraph__.add_node(node)
-        pass
 
 
-    def addCircuitSource (self, sourceNode):
+    def addCircuitSource(self, sourceNode):
         """
         Adds a circuit source to the network that represents the source for the
         electrical
@@ -41,49 +41,62 @@ class ElectricalNetwork (object):
         self.__circuitSources__.append(sourceNode)
 
 
-    def removeNode (self):
+    def removeNode(self):
+        """
+        remove node not implemented
+        """
         pass
 
 
-    def addEdge (self, edge, node1, node2):
+    def addEdge(self, edge, node1, node2):
+        """
+        adds an edge to the network between two nodes
+        """
         self.__networkGraph__.add_edge(node1, node2, data=edge)
 
 
-    def removeEdge (self, node1, node2):
-        self.__networkGraph__.remove_edge(node1,node2)
+    def removeEdge(self, node1, node2):
+        """
+        remove edge from the network between two nodes
+        """
+        self.__networkGraph__.remove_edge(node1, node2)
 
 
-    def getConnectedEdgeCount (self, node):
+    def getConnectedEdgeCount(self, node):
         """
-        returns the number of edges connected to the node.. ie the degree
+        returns the number of edges connected to the node. ie the degree
         """
-        return(self.__networkGraph__.degree(node))
+        return self.__networkGraph__.degree(node)
 
 
     def getGraph(self):
-        return(self.__networkGraph__)
+        """
+        returns the graph for the network
+        """
+
+        return self.__networkGraph__
 
 
 
-class ElectricalObject (object):
+class ElectricalObject(object):
     """
-    represnts the basic behaviors and attributes of any item that is part of
+    represents the basic behaviors and attributes of any item that is part of
     an electrical system.
 
     phaseDesignation
     """
 
-    def __init__ (self, electricalNetwork, phase, **kwargs):
+    def __init__(self, electricalNetwork, phase, **kwargs):
         self.electricalNetwork = electricalNetwork
         self.setPhase(phase)
         for name, value in kwargs.items():
             setattr(self, name, value)
 
-    def __del__ (self):
+    def __del__(self):
         pass
 
 
-    def __validateVoltage__ (self, voltage):
+    def __validateVoltage__(self, voltage):
         """
         Ensures that the a voltage value is suitable number value
         """
@@ -96,39 +109,42 @@ class ElectricalObject (object):
         except ValueError:
             return False
 
-    def  __updateElectricalInfo__ (self):
+    def  __updateElectricalInfo__(self):
         """
         run to update the electrical information about an electrical object
         """
         pass
 
-    def setPhase (self, phase):
+    def setPhase(self, phase):
         """
         validates and sets the phase of the electrical object
         """
         if phase in self.electricalNetwork.phaseDesignations:
             setattr(self, 'phase', phase)
         else:
-            raise ValueError('Phase {0} not in Network designations of {1}'.format(phase,self.electricalNetwork.phaseDesignations ))
+            raise ValueError('Phase {0} not those for the network of {1}'.format
+                            (phase, self.electricalNetwork.phaseDesignations))
 
 
     def changePhase(self, originalPhase, newPhase):
         """
-        Changes the phase of an electrical object.  Original Phases are the phase
-        that are to be changed and the newPhases are the phases that they are to
+        Changes the phase of an electrical object.  Original Phases are the
+        phase that are to be changed and the newPhases are the phases that they
+        are to
         """
         pass
 
 
-    def setVoltage (self, voltage, units='volts'):
+    def setVoltage(self, voltage, units='volts'):
         """
         sets the electrical voltage all voltages are stored in volts, but may
         be added in kilovolts by specifying different units
         """
         if self.__validateVoltage__(voltage):
-            if units.lower() in ['volts','volt','v']:
+            if units.lower() in ['volts', 'volt', 'v']:
                 setattr(self, 'voltage', voltage)
-            elif units.lower() in ['kv', 'kvolts', 'kilovolts', 'kvolt', 'kilovolt']:
+            elif units.lower() in ['kv', 'kvolts', 'kilovolts', 'kvolt',
+                                    'kilovolt']:
                 setattr(self, 'voltage', voltage / 1000)
             else:
                 raise ValueError("Can not determine the voltage units")
@@ -136,11 +152,14 @@ class ElectricalObject (object):
             raise ValueError("Unable to set the voltage")
 
 
-    def getNetwork (self):
-        return(self.electricalNetwork)
+    def getNetwork(self):
+        """
+        return the network for the electrical object that it belongs
+        """
+        return self.electricalNetwork
 
 
-    def getSources (self):
+    def getSources(self):
         """
         returns all the source objects for the network that they object can
         reach
@@ -151,10 +170,10 @@ class ElectricalObject (object):
         for src in network.__circuitSources__:
             if nx.has_path(graph, src, self):
                 sources.append(src)
-        return(sources)
+        return sources
 
 
-    def getVoltage (self, units='volts'):
+    def getVoltage(self, units='volts'):
         """
         determines the voltage of an object based on the connected source
         and any transformation between object and circuit source.  If the object
@@ -169,56 +188,59 @@ class ElectricalObject (object):
             for src in circuitSources:
                 if voltage:
                     if src.getVoltage() is not voltage:
-                        raise RuntimeError ("Multiple circuit source voltage do not match")
+                        raise RuntimeError("Multiple circuit source voltage" \
+                                            "do not match")
                 else:
                     voltage = src.getVoltage()
-        return (voltage)
+        return voltage
 
 
-class ElectricalDevice (ElectricalObject):
+class ElectricalDevice(ElectricalObject):
     """
     Represents an electrical device that is a node in the network
     """
 
-    def __init__ (self, electricalNetwork, phase, **kwargs):
+    def __init__(self, electricalNetwork, phase, **kwargs):
         super(ElectricalDevice, self).__init__(electricalNetwork, phase)
         electricalNetwork.addNode(self)
 
 
-    def __checkConnectedEdge__ (self):
+    def __checkConnectedEdge__(self):
         """
         verifies that the conencted edges meet the criteria of each subclass
         This methond must be implemented by each subclass
         """
         network = self.electricalNetwork
         if network.getConnectedEdgeCount(self) <= network.__maxNodeEdges__:
-            return(True)
+            return True
         else:
-            return (False)
+            return False
 
 
-class ElectricalConductor (ElectricalObject):
+class ElectricalConductor(ElectricalObject):
     """
     Represents and electrical conductor that is a edge in the network
     """
 
-    def __init__ (self, electricalNetwork, phase, node1, node2):
+    def __init__(self, electricalNetwork, phase, node1, node2):
         """
         """
         super(ElectricalConductor, self).__init__(electricalNetwork, phase)
         electricalNetwork.addEdge(self, node1, node2)
-        electricalNetwork.addEdge(self,node2, node1)
-        if not node1.__checkConnectedEdge__() or not node2.__checkConnectedEdge__():
+        electricalNetwork.addEdge(self, node2, node1)
+        if (not node1.__checkConnectedEdge__() or
+            not node2.__checkConnectedEdge__()):
             electricalNetwork.removeEdge(node1, node2)
-            raise RuntimeError("Unable to add conductor as it violates node connectivity rule")
+            raise RuntimeError("Unable to add conductor as it violates node" \
+                                "connectivity rule")
 
 
-class SimpleConductorJunction (ElectricalDevice):
+class SimpleConductorJunction(ElectricalDevice):
     """
     represents a simple junction between conductors
     """
 
-    def __init__ (self, electricalNetwork, phase, **kwargs):
+    def __init__(self, electricalNetwork, phase, **kwargs):
         super(SimpleConductorJunction, self).__init__(electricalNetwork, phase)
         electricalNetwork.addNode(self)
 
@@ -233,14 +255,14 @@ class SimpleConductorJunction (ElectricalDevice):
 ##            return (False)
 
 
-class SwitchableDevice (ElectricalDevice):
+class SwitchableDevice(ElectricalDevice):
     """
     represents any device within an electrical system that can be switched or
     more formal that can have differnt states that interrupt the electical flow
     """
 
-    def __init__(self, electricalNetwork, phase,**kwargs):
-        super(SwitchableDevice,self).__init__(electricalNetwork, phase)
+    def __init__(self, electricalNetwork, phase, **kwargs):
+        super(SwitchableDevice, self).__init__(electricalNetwork, phase)
 
         openPhases = {}
         for phs in self.electricalNetwork.phaseDesignations:
@@ -252,15 +274,16 @@ class SwitchableDevice (ElectricalDevice):
         setattr(self, 'openPhases', openPhases)
 
 
-    def __checkConnectedEdge__ (self):
+    def __checkConnectedEdge__(self):
         """
         Checks the connected edges to ensure that the connections are correct
         """
         network = self.electricalNetwork
-        if network.getConnectedEdgeCount(self) <= network.__maxSwitchDeviceEdges__:
-            return(True)
+        if (network.getConnectedEdgeCount(self) <=
+                network.__maxSwitchDeviceEdges__):
+            return True
         else:
-            return (False)
+            return False
 
 
     def open(self, phase='all'):
@@ -270,9 +293,9 @@ class SwitchableDevice (ElectricalDevice):
         """
         network = self.electricalNetwork
         g = network.getGraph()
-        predecessors =  g.predecessors(self)
+        predecessors = g.predecessors(self)
 
-        if phase.lower() <> 'all':
+        if phase.lower() != 'all':
             for x in phase.upper():
                 if self.openPhases[x] is not None:
                     self.openPhases[x] = True
@@ -284,13 +307,14 @@ class SwitchableDevice (ElectricalDevice):
         for pred in predecessors:
             g.remove_edge(pred, self)
 
+
     def close(self, phase='all'):
         """
         Sets the devices status to on on the specified phases.  If the phase is
         set to all, all phases will be closed.
         """
 
-        if phase.lower() <> 'all':
+        if phase.lower() != 'all':
             for x in phase.upper():
                 if self.openPhases[x] is not None:
                     self.openPhases[x] = False
@@ -301,51 +325,51 @@ class SwitchableDevice (ElectricalDevice):
 
         network = self.electricalNetwork
         g = network.getGraph()
-        successors =  g.successors(self)
+        successors = g.successors(self)
 
         for succ in successors:
             if not g.has_edge(succ, self):
                 g.add_edge(succ, self)
 
 
-
-
-    def changePhase (self, originalPhase, newPhase):
+    def changePhase(self, originalPhase, newPhase):
         """
-        Changes the phases from one to another such that the originalPhases become
-        the values for the new phases.  For SwitchingDevices this also changes
-        the switching configuration so that the phases that were open also swap
+        Changes the phases from one to another such that the originalPhases
+        become the values for the new phases.  For SwitchingDevices this also
+        changes the switching configuration so that the phases that were open
+        also swap
         """
         for phs in originalPhase:
             pass
 
 
-class VoltageTransformer (ElectricalObject):
+class VoltageTransformer(ElectricalObject):
     """
     A Voltage transformer transforms one voltage to another voltage
     such as taking 13kV and transforming to 120/240 volts
     """
 
 
-class Conductor (ElectricalObject):
+class Conductor(ElectricalObject):
     """
-    represents the wire or conductor that connects different electrical compoents
-    together
-    """
-
-
-class ElectricalSource (ElectricalObject):
-    """
-    Represents the source of electricity for an electrical system.  This could be
-    a battery, generator, or substation.
+    represents the wire or conductor that connects different electrical
+    compoents together
     """
 
-    def __init__ (self, electricalNetwork ,designation, voltage, voltageunits='volts', phase='ABC', **kwargs):
+
+class ElectricalSource(ElectricalObject):
+    """
+    Represents the source of electricity for an electrical system.  This could
+    be a battery, generator, or substation.
+    """
+
+    def __init__(self, electricalNetwork, designation, voltage,
+                        voltageunits='volts', phase='ABC', **kwargs):
         """
         initilizer for the object.  An electrical source must have a voltage,
         phase and designation.  It may have any number of other attributes
         """
-        super(ElectricalSource,self).__init__(electricalNetwork, phase)
+        super(ElectricalSource, self).__init__(electricalNetwork, phase)
         electricalNetwork.addCircuitSource(self)
         if designation:
             setattr(self, 'designation', designation)
@@ -356,22 +380,25 @@ class ElectricalSource (ElectricalObject):
         else:
             raise "Electrical Source must have a voltage"
 
-        for k,v in kwargs.items():
-            setattr(self, k,v)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
-    def __checkConnectedEdge__ (self):
+    def __checkConnectedEdge__(self):
         """
         Checks the connected edges to ensure that the connections are correct
         """
         network = self.electricalNetwork
         if network.getConnectedEdgeCount(self) <= network.__maxNodeEdges__:
-            return(True)
+            return True
         else:
-            return (False)
+            return False
 
 
 def main():
+    """
+    Main function if run directly
+    """
     pass
 
 if __name__ == '__main__':
